@@ -1,0 +1,254 @@
+<!DOCTYPE html> 
+
+<html> 
+
+<head> 
+ <title>Jquery Heat loss calculator</title>
+  <meta name=viewport content="user-scalable=no,width=device-width" />
+
+  <link rel=stylesheet href="js/jquery.mobile-1.2.0.css" />
+
+  <script src="js/jquery-1.8.2.js"></script>
+
+  <script src="js/jquery.mobile-1.2.0.js"></script>
+
+</head> 
+<body> 
+
+
+
+<div data-role=page id=home>
+
+  <div data-role=header>
+
+    <h1>Heat loss calculator</h1>
+
+  </div>
+
+
+
+
+  <div data-role=content> 
+
+   <span> Choose an room type </span>
+
+    <select data-native-menu=false id=tip>
+
+    <option value="1">Living Room</option>
+					<option value="2">Bedroom</option>
+					<option value="3">Bathroom</option>
+					<option value="4">Kitchen</option>
+					<option value="5">Hallway</option>
+
+    </select>
+
+
+    Width  <input type=text id=widt /> <br />
+    Lenght  <input type=text id=leng /> <br />
+Height  <input type=text id=heigh /> <br />
+
+ <span> Type of windows </span>
+
+    <select data-native-menu=false id=window_tip>
+
+   <option selected="selected" value=""></option>
+					<option value="1">Double Glazed, Plastic Frame</option>
+					<option value="2">Double Glazed, Wooden Frame</option>
+					<option value="3">Double Glazed, Metal Frame</option>
+					<option value="4">Single Glazed, Wooden Frame</option>
+					<option value="5">Single Glazed, Metal Frame</option>
+    </select>
+Glazed Area (m<sup>2</sup>)<input type=text id=glas_area /> <br />
+
+ <span>Type of external walls</span>
+ <select data-native-menu=false id=wall_tip>
+   <option selected="selected" value=""></option>
+					<option value="1">Brick Cavity</option>
+					<option value="2">Insulated Brick Cavity</option>
+					<option value="3">105mm Solid Brick</option>
+					<option value="4">220mm Solid Brick</option>
+					<option value="5">Wood Frame</option>
+    </select>
+
+
+<span>Number of external walls</span>
+ <select data-native-menu=false id=wall_numb>
+   <option selected="selected" value=""></option>
+					<option selected="selected" value=""></option>
+					<option value="0">0</option>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+    </select>
+
+
+<span>What is below this room?</span>
+ <select data-native-menu=false id=room_bottom>
+  	<option selected="selected" value=""></option>
+					<option value="1">Heated Room</option>
+					<option value="2">Soil under a wooden floor</option>
+					<option value="3">Soil under a concrete floor</option>
+					<option value="4">Air under a suspended concrete floor</option>
+    </select>
+
+
+<span>What is above this room?</span>
+ <select data-native-menu=false id=room_top>
+  <option selected="selected" value=""></option>
+					<option value="1">Heated Room</option>
+					<option value="2">Pitched Roof, uninsulated</option>
+					<option value="3">Pitched Roof, insulated to 50mm</option>
+					<option value="4">Pitched Roof, insulated to 100mm</option>
+					<option value="5">Flat Roof, uninsulated</option>
+					<option value="6">Flat Roof, insulated</option>
+    </select>
+
+  </div>
+
+<input type=text id=wat readonly/> 
+
+</div>
+
+</body>
+
+</html>
+
+<script>
+
+var html = "";
+
+html += "<a id=btn href=# data-role=button data-icon=check data-iconpos=right>";
+
+html +=     "Calculate";
+
+html += "</a>";
+
+$("#home div:jqmData(role=content)").append (html);
+
+ $("#btn").bind ("click", function (event)
+{
+
+var wall_total =4;
+var small_room =15;
+var k_airloss = 0.33;
+var k_safety = 1.15;
+
+var cof_windows = [];cof_windows['1'] = cof_windows['2'] =2.8;cof_windows['2'] =2.8;cof_windows['3'] = 3;cof_windows['4'] = 5.3;cof_windows['5'] = 5.6;
+
+var cof_walls = [];cof_walls['1'] = 1.5;cof_walls['2'] = 0.6;cof_walls['3'] = 3;cof_walls['4'] = 2.1;cof_walls['5'] = 0.4;
+
+var cof_top = [];
+cof_top['1'] = 0;
+cof_top['2'] = 2.7;
+cof_top['3'] = 0.61;
+cof_top['4'] = 0.35;
+cof_top['5'] = 1.66;
+cof_top['6'] = 0.5;
+
+var cof_bottom = {
+		"1" : { "1" : {"1" : 0, "2" : 0}, "2" : {"1" : 0,"2" : 0} },
+		
+		"2" : {"1" : {"1" : 0.96,"2" : 0.96},"2" : {"1" : 1.27,"2" : 1.27} },
+		
+		"3" : {"1" : {"1" : 0.45,"2" : 0.72},"2" : {"1" : 0.74,"2" : 1.22} },
+		
+		"4" : {"1" : {"1" : 2.13,"2" : 2.13},"2" : {"1" : 2.13,"2" : 2.13}}
+	};
+
+var coef_room_type = {
+		"1" : {
+			"1" : 1.5,
+			"2" : 22
+		},
+		"2" : {
+			"1" : 1.75,
+			"2" : 19
+		},	
+		"3" : {
+			"1" : 2,
+			"2" : 23
+		},	
+	"4" : {
+			"1" : 1.75,
+			"2" : 19
+		}
+		,	
+	
+		"5" : {
+			"1" : 1.75,
+			"2" : 19
+		}
+	};
+
+
+
+var r_tip = $("#tip").attr("value");
+var r_width = parseFloat($("#widt").attr("value"));
+var r_height = parseFloat($("#heigh").attr("value"));
+var r_lenght = parseFloat($("#leng").attr("value"));
+var t_window =$("#window_tip").attr("value");
+var area_window = parseFloat($("#glas_area").attr("value"));
+var t_wall =$("#wall_tip").attr("value");
+var num_ext_wall =$("#wall_numb").attr("value");
+var room_b = $("#room_bottom").attr("value");
+var room_t = $("#room_top").attr("value");
+
+
+var inter_wall = wall_total- num_ext_wall;
+var area= r_height * ((r_width + r_lenght) * 2);
+var area_out_windows=area-area_window;
+var ext_area=  num_ext_wall/wall_total*area_out_windows;
+var in_area=  area_out_windows-ext_area;
+var floor_area = r_width * r_lenght;
+
+var window_loss = area_window * parseFloat(cof_windows[t_window]);
+var external_loss =  ext_area * parseFloat(cof_walls[t_wall]);
+var ceiling_loss = floor_area * parseFloat(cof_top[room_t]);
+
+var floorLoss = 0;
+var roomSizeIndex = '1';
+if(floor_area >= small_room) { roomSizeIndex = '2'; }
+var roomWallsIndex = '1';
+if(num_ext_wall > 1) { roomWallsIndex = '2'; }
+	
+floorLoss = floor_area * parseFloat(cof_bottom[room_b][roomSizeIndex][roomWallsIndex]);
+var air_loss = floor_area * r_height * k_airloss * coef_room_type[r_tip]['1'];
+
+var internal_loss = 0;
+	var internal_ceeling_loss = 0;
+	
+	switch(r_tip)
+	{
+		case '1' :
+			internal_loss = (in_area * 2) * 3;
+			
+			if(room_t == '1')
+			{
+			  internal_ceeling_loss = (floor_area * 1.6) * 3; 
+			}
+		break;
+		
+		case '3' :
+			internal_loss = (in_area * 2) * 4;
+			
+			if(room_t == '1')
+			{
+			  internal_ceeling_loss = (floor_area * 1.6) * 4; 
+			}
+		break;
+		default :
+		break;
+	
+	}
+
+var total = (window_loss + external_loss + floorLoss + ceiling_loss + air_loss) * coef_room_type[r_tip]['2'];
+total+= internal_loss + internal_ceeling_loss;
+total*= k_safety;
+var watts = Math.floor(total);
+
+var response = r_width * r_height;
+$("#wat").val( parseInt(watts)+" W");
+
+});
+
+</script>
